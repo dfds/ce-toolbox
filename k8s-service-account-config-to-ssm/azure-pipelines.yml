@@ -1,19 +1,34 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Only manually triggered for now
+trigger: none
+pr: none
 
-trigger:
-- master
+# Define resources for container to use
+resources:
+  containers:
+    - container: python-ce
+      image: dfdsdk/python-ce:latest
+      env:
+        AWS_ROLE_CLOUD_ADMIN: $(AWS_ROLE_CLOUD_ADMIN)
+        AWS_ROLE_ADFS_ADMIN: $(AWS_ROLE_ADFS_ADMIN)
 
-pool:
-  vmImage: ubuntu-latest
+stages:
+  # Continuous Integration steps
+  - stage: CI
+    displayName: "Continuous Integration"
+    pool:
+      vmImage: "ubuntu-latest"
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    jobs:
+      - job: exec_script
+        displayName: Execute Python script
+        container: python-ce
+        steps:
+          - bash: poetry install
+            workingDirectory: ./k8s-service-account-config-to-ssm/
+            displayName: "Initialise Poetry"
+          - bash: poetry run python ./kube_config_generator.py -r $ROOTID -a $ACCOUNTID
+            workingDirectory: ./k8s-service-account-config-to-ssm/
+            displayName: "Execute kube_config_generator script"
+            env:
+              ROOTID: $(RootID)
+              ACCOUNTID: $(AccountID)
