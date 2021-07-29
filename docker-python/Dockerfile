@@ -2,7 +2,7 @@
 # CREATE UPDATED BASE IMAGE
 # ========================================
 
-FROM python:3.9-slim AS base
+FROM python:3.9 AS base
 
 RUN apt-get update \
     && apt-get dist-upgrade -y \
