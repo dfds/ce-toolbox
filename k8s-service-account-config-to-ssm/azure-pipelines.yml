@@ -1,3 +1,7 @@
+# Only manually triggered for now
+trigger: none
+pr: none
+
 # Define resources for container to use
 resources:
   containers:
@@ -22,6 +26,9 @@ stages:
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
-          - bash: poetry run python ./kube_config_generator.py --help
+          - bash: poetry run python ./kube_config_generator.py -h -r $ROOTID -a $ACCOUNTID
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Execute kube_config_generator script"
+            env:
+              ROOTID: $(RootID)
+              ACCOUNTID: $(AccountID)
