@@ -14,6 +14,9 @@ RUN apt-get update \
 # # ========================================
 
 FROM base
+RUN apt-get install -y curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip3 install poetry
 
 
