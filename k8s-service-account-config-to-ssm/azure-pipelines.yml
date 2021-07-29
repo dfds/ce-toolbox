@@ -22,3 +22,6 @@ stages:
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
+          - bash: poetry run python ./kube_config_generator.py --help
+            workingDirectory: ./k8s-service-account-config-to-ssm/
+            displayName: "Execute kube_config_generator script"
