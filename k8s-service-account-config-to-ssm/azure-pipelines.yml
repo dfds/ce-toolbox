@@ -1,19 +1,23 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Define resources for container to use
+resources:
+  containers:
+    - container: python-ce
+      image: dfdsdk/python-ce:latest
+      env:
+        AWS_ROLE_CLOUD_ADMIN: $(AWS_ROLE_CLOUD_ADMIN)
+        AWS_ROLE_ADFS_ADMIN: $(AWS_ROLE_ADFS_ADMIN)
 
-trigger:
-- master
+stages:
+  # Continuous Integration steps
+  - stage: CI
+    displayName: "Continuous Integration"
+    pool:
+      vmImage: "ubuntu-latest"
 
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    jobs:
+      - job: exec_script
+        displayName: Execute Python script
+        container: python-ce
+        steps:
+          - bash: ./poetry install
+            displayName: "Initialise Poetry"
