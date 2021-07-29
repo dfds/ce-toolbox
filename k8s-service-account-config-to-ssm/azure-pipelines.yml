@@ -19,5 +19,5 @@ stages:
         displayName: Execute Python script
         container: python-ce
         steps:
-          - bash: poetry install
+          - bash: cat /README.md
             displayName: "Initialise Poetry"
