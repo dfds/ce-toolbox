@@ -19,5 +19,6 @@ stages:
         displayName: Execute Python script
         container: python-ce
         steps:
-          - bash: ls
+          - bash: poetry install
+            workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
