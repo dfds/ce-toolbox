@@ -15,3 +15,10 @@ RUN apt-get update \
 
 FROM base
 RUN pip3 install poetry
+
+
+# ========================================
+# END
+# ========================================
+
+CMD [ "bash" ]
