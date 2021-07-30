@@ -34,8 +34,6 @@ stages:
               curl -Lo $LOCAL_FILE $DOWNLOAD_URL
               export KUBECONFIG=$LOCAL_FILE
               export AWS_PROFILE=saml
-              export
-              cat $KUBECONFIG
             displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
