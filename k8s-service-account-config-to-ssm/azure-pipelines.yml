@@ -13,6 +13,7 @@ resources:
         SAML2AWS_USERNAME: $(USERNAME)
         SAML2AWS_PASSWORD: $(PASSWORD)
         SAML2AWS_URL: $(SAML_URL)
+        KUBECONFIG_URL: $(KUBECONFIG_URL)
 stages:
   # Continuous Integration steps
   - stage: CI
