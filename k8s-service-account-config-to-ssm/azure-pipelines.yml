@@ -32,14 +32,18 @@ stages:
               PARENT_DIR=$(dirname $LOCAL_FILE)
               mkdir -p $PARENT_DIR
               curl -Lo $LOCAL_FILE $DOWNLOAD_URL
-              export KUBECONFIG=$LOCAL_FILE
+              echo "##vso[task.setvariable variable=KUBECONFIG]$LOCAL_FILE"
+              echo "##vso[task.setvariable variable=AWS_PROFILE]saml"
             displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
+            env:
+              SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
-          - bash: poetry run python ./kube_config_generator.py -r $ROOTID -a $ACCOUNTID
+          - bash: |
+              poetry run python ./kube_config_generator.py -r $ROOTID -a $ACCOUNTID
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Execute kube_config_generator script"
             env:
