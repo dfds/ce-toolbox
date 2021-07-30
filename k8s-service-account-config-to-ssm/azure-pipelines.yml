@@ -34,9 +34,15 @@ stages:
               curl -Lo $LOCAL_FILE $DOWNLOAD_URL
               export KUBECONFIG=$LOCAL_FILE
               export AWS_PROFILE=saml
+            env:
+              KUBECONFIG_URL: $(KUBECONFIG_URL)
             displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
+            env:
+              SAML2AWS_USERNAME: $(SAML2AWS_USERNAME)
+              SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
+              SAML2AWS_URL: $(SAML2AWS_URL)
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
