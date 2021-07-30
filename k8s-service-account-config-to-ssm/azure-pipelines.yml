@@ -34,6 +34,8 @@ stages:
               curl -Lo $LOCAL_FILE $DOWNLOAD_URL
               export KUBECONFIG=$LOCAL_FILE
               export AWS_PROFILE=saml
+              echo "##vso[task.setvariable variable=KUBECONFIG]$KUBECONFIG"
+              echo "##vso[task.setvariable variable=AWS_PROFILE]$AWS_PROFILE"
             displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
