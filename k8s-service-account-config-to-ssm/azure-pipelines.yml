@@ -25,6 +25,13 @@ stages:
         displayName: Execute Python script
         container: python-ce
         steps:
+          - bash: |
+              DOWNLOAD_URL=$KUBECONFIG_URL
+              LOCAL_FILE=~/.kube/hellman-saml.config
+              PARENT_DIR=$(dirname $LOCAL_FILE)
+              mkdir -p $PARENT_DIR
+              curl -Lo $LOCAL_FILE $DOWNLOAD_URL
+            displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
           - bash: poetry install
