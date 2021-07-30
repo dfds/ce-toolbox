@@ -10,9 +10,9 @@ resources:
       env:
         AWS_ROLE_CLOUD_ADMIN: $(AWS_ROLE_CLOUD_ADMIN)
         AWS_ROLE_ADFS_ADMIN: $(AWS_ROLE_ADFS_ADMIN)
-        SAML_USERNAME: $(USERNAME)
-        SAML_PASSWORD: $(PASSWORD)
-        SAML_URL: $(SAML_URL)
+        SAML2AWS_USERNAME: $(USERNAME)
+        SAML2AWS_PASSWORD: $(PASSWORD)
+        SAML2AWS_URL: $(SAML_URL)
 stages:
   # Continuous Integration steps
   - stage: CI
@@ -25,7 +25,7 @@ stages:
         displayName: Execute Python script
         container: python-ce
         steps:
-          - bash: saml2aws configure --idp-provider ADFS --username $SAML_USERNAME --password $SAML_PASSWORD --url $SAML_URL --mfa Auto --skip-prompt
+          - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
