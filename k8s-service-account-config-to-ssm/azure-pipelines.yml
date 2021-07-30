@@ -32,6 +32,7 @@ stages:
               PARENT_DIR=$(dirname $LOCAL_FILE)
               mkdir -p $PARENT_DIR
               curl -Lo $LOCAL_FILE $DOWNLOAD_URL
+              export KUBECONFIG=$LOCAL_FILE
             displayName: Download Kube Config
           - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
