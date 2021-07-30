@@ -34,7 +34,7 @@ def assume_saml_role(role_to_assume: str) -> bool:
     if proc_result.returncode == 0:
         logging.info("Role assumed succesfully.")
     else:
-        logging.warn("Role failed to be assumed.")
+        logging.warning("Role failed to be assumed.")
     return proc_result.returncode == 0
 
 
