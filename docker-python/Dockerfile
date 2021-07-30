@@ -21,6 +21,17 @@ RUN pip3 install poetry
 
 
 # ========================================
+# AWS IAM AUTHENTICATOR
+# ========================================
+
+ENV AWSIAMAUTH_VERSION=1.15.10/2020-02-22
+
+RUN curl -L https://amazon-eks.s3-us-west-2.amazonaws.com/${AWSIAMAUTH_VERSION}/bin/linux/amd64/aws-iam-authenticator -o aws-iam-authenticator \
+    && chmod +x aws-iam-authenticator \
+    && mv aws-iam-authenticator /usr/local/bin/
+
+
+# ========================================
 # SAML2AWS
 # ========================================
 
