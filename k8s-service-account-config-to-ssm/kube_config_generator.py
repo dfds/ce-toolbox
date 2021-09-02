@@ -276,6 +276,12 @@ def main(argv):
                         )
                         logging.error(" The generated exception was:")
                         logging.error(f"  {ex}")
+    else:
+        logging.error(
+            "The script is exiting because the required SAML Role was not able to be"
+            " assumed."
+        )
+        sys.exit(3)
 
 
 if __name__ == "__main__":
