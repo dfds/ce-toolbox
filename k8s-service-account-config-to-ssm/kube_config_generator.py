@@ -209,6 +209,7 @@ def main(argv):
         show_usage()
         sys.exit(2)
 
+    error_str: str = ""
     capability_root_id: str = root_id
     namespace: str = root_id
     kube_role: str = f"{capability_root_id}-fullaccess"
@@ -230,6 +231,12 @@ def main(argv):
                     namespace=namespace,
                     role_name=kube_role,
                 )
+                if ret_val is False:
+                    logging.error("The required Role Binding could not be created.")
+                    sys.exit(3)
+            else:
+                logging.error("The required Service Account could not be created.")
+                sys.exit(3)
 
             if ret_val:
                 kube_config: str = create_k8s_kube_config(
@@ -276,11 +283,18 @@ def main(argv):
                         )
                         logging.error(" The generated exception was:")
                         logging.error(f"  {ex}")
+                        sys.exit(3)
+                else:
+                    logging.error(
+                        "The ADFS Admin SAML Role was not able to be assumed."
+                    )
+                    sys.exit(3)
+
+        else:
+            logging.error("The required Kubernetes context could not be selected.")
+            sys.exit(3)
     else:
-        logging.error(
-            "The script is exiting because the required SAML Role was not able to be"
-            " assumed."
-        )
+        logging.error("The Cloud Admin SAML Role was not able to be assumed.")
         sys.exit(3)
 
 
