@@ -11,7 +11,7 @@ from config import Config
 from mypy_boto3_sts import Client as stsclient
 from mypy_boto3_sts.type_defs import AssumeRoleResponseTypeDef
 from mypy_boto3_ssm import Client as ssmclient
-from mypy_boto3_ssm.type_defs import PutParameterResultTypeDef
+from mypy_boto3_ssm.type_defs import AddTagsToResourceRequestRequestTypeDef, PutParameterResultTypeDef
 
 # define constants
 AWS_PARAMETER_NAME = "/managed/deploy/kube-config"
@@ -20,7 +20,7 @@ AWS_REGION = "eu-central-1"
 CAPABILITY_AWS_ROLE_SESSION = "kube-config-paramstore"
 KUBERNETES_CONTEXT = "hellman-saml"
 SERVICE_ACCOUNT_NAMESPACE = "kube-system"
-
+SSM_PARAMETER_TAG_CREATEDBY = "k8s-service-account-config-to-ssm"
 
 def assume_saml_role(role_to_assume: str) -> bool:
     """
@@ -273,7 +273,7 @@ def main(argv):
                             Name=AWS_PARAMETER_NAME,
                             Value=kube_config,
                             Type="SecureString",
-                            Overwrite=True,
+                            Overwrite=True
                         )
                         logging.info("Parameter creation completed.")
 
@@ -284,6 +284,29 @@ def main(argv):
                         logging.error(" The generated exception was:")
                         logging.error(f"  {ex}")
                         sys.exit(3)
+
+                    try:
+                        # add required tags to the parameter for tracking purposes; they have to be added
+                        # seperately because you can't add tags and combine the option with an overwrite
+                        response: AddTagsToResourceRequestRequestTypeDef = ssm_client.add_tags_to_resource(
+                            ResourceType='Parameter',
+                            ResourceId=AWS_PARAMETER_NAME,
+                            Tags=[
+                                {
+                                    'Key': 'createdBy',
+                                    'Value': SSM_PARAMETER_TAG_CREATEDBY
+                                }
+                            ]
+                        )
+
+                    except Exception as ex:
+                        logging.error(
+                            "An error occurred whilst trying to add the createdBy tag to the parameter."
+                        )
+                        logging.error(" The generated exception was:")
+                        logging.error(f"  {ex}")
+                        sys.exit(3)
+
                 else:
                     logging.error(
                         "The ADFS Admin SAML Role was not able to be assumed."
