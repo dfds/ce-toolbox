@@ -126,6 +126,23 @@ class Repo:
                 number_of_repos_left -= page_limit
         return all_repos
 
+    def get_private_repos(self) -> list:
+        """Get a list of the private repositories in the organization.
+        :return: list
+        """
+        private_repos: list = self.get_all_repos()
+        outer_counter: int = 0
+        for repos in private_repos:
+            inner_counter: int = 0
+            for r in repos:
+                is_private: bool = r.get('private', False)
+                if not is_private:
+                    repos.pop(inner_counter)
+                inner_counter += 1
+            private_repos[outer_counter] = repos
+            outer_counter += 1
+        return private_repos
+
     @staticmethod
     def get_protected_repos() -> list:
         """
