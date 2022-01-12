@@ -9,7 +9,10 @@ GITHUB_ORGANIZATION = 'dfds'
 
 def main():
     """
-    Requires https://github.com/zricethezav/gitleaks and git pre-installed.
+    Requirements that needs to be pre-installed:
+    - git
+    - https://github.com/zricethezav/gitleaks
+    - https://github.com/kootenpv/gittyleaks
     """
 
     token: str = os.environ.get('GITHUB_OAUTH2_TOKEN')
