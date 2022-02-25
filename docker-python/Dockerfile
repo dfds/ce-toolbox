@@ -14,21 +14,20 @@ RUN apt-get update \
 # # ========================================
 
 FROM base
-RUN apt-get install -y curl \
+RUN apt-get install -y curl unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN pip3 install poetry
 
 
 # ========================================
-# AWS IAM AUTHENTICATOR
+# AWS CLI v2
 # ========================================
 
-ENV AWSIAMAUTH_VERSION=1.15.10/2020-02-22
-
-RUN curl -L https://amazon-eks.s3-us-west-2.amazonaws.com/${AWSIAMAUTH_VERSION}/bin/linux/amd64/aws-iam-authenticator -o aws-iam-authenticator \
-    && chmod +x aws-iam-authenticator \
-    && mv aws-iam-authenticator /usr/local/bin/
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm awscliv2.zip
 
 
 # ========================================
