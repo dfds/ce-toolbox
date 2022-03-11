@@ -37,7 +37,7 @@ $AwsProfile = "saml"
 
 # SAML2AWS Connection
 $SamlRole = "arn:aws:iam::738063116313:role/CloudAdmin"
-saml2aws login --role=$SamlRole --force
+saml2aws login --role=$SamlRole --force --skip-prompt
 
 # Generate kube toke and config for service account
 $ENV:AWS_PROFILE = $AwsProfile
@@ -52,7 +52,7 @@ $KubeConfig = $KubeConfigTemplate -replace 'NAMESPACE_REPLACE', $Namespace -repl
 
 # SAML2AWS Connection
 $SamlRole = "arn:aws:iam::454234050858:role/ADFS-Admin"
-saml2aws login --role=$SamlRole --force
+saml2aws login --role=$SamlRole --force --skip-prompt
 
 # Assume role
 Set-DefaultAWSRegion -Region $AwsRegion

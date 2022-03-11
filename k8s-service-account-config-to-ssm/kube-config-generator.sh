@@ -17,7 +17,7 @@ AWS_PROFILE="saml"
 
 # Define the SAML role to use and login with that role
 SAML_ROLE="arn:aws:iam::738063116313:role/CloudAdmin"
-saml2aws login --role=$SAML_ROLE --force
+saml2aws login --role=$SAML_ROLE --force --skip-prompt
 
 # Generate kube toke and config for service account
 kubectl create serviceaccount --namespace kube-system $SERVICE_ACCOUNT_NAME
@@ -28,7 +28,7 @@ KUBE_CONFIG=$(sed "s/KUBE_TOKEN/${KUBE_TOKEN}/g" config.template | sed "s/NAMESP
 
 # SAML2AWS Connection
 SAML_ROLE="arn:aws:iam::454234050858:role/ADFS-Admin"
-saml2aws login --role=$SAML_ROLE --force
+saml2aws login --role=$SAML_ROLE --force --skip-prompt
 
 # Assume role
 AWS_ASSUMED_CREDS=( $(aws --profile ${AWS_PROFILE} sts assume-role \
