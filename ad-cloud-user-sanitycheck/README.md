@@ -1,4 +1,4 @@
-# AD Cloud USer Sanity-check
+# AD Cloud User Sanity-check
 
 Check for common issues for user accounts that are meant to be used in AWS, Azure DevOps etc.
 
