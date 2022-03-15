@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "github-branch-protection"
+version = "0.1.0"
+description = "Add GitHub branch protection to all repositories"
+authors = ["Audun Nes <aunes@dfds.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.27.1"
+
+[tool.poetry.dev-dependencies]
+coverage = "^6.3.2"
+flake8 = "^4.0.1"
+tox = "^3.24.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
