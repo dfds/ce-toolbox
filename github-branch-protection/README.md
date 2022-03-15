@@ -9,10 +9,8 @@ Guidelines for developing and testing the housekeeping scripts.
 ### Virtual environment
 
 ```bash
-mkdir -p ~/.virtualenvs
-virtualenv ~/.virtualenvs/housekeeping
-source ~/.virtualenvs/housekeeping/bin/activate
-python3 -m pip -r requirements_dev.txt
+poetry install
+poetry shell
 ```
 
 ### Testing and code coverage
@@ -20,8 +18,7 @@ python3 -m pip -r requirements_dev.txt
 There are currently no test cases, but this is how testing would look like:
 
 ```bash
-tox -e flake8
-tox
+poetry run flake8
 ```
 
 ## Usage
@@ -29,8 +26,8 @@ tox
 ### Set branch protection rules
 
 ```bash
-source ~/.virtualenvs/housekeeping/bin/activate
-cd ~/git/housekeeping
+poetry install --no-dev
+poetry shell
 export GITHUB_OAUTH2_TOKEN=<REDACTED>
 ./manage_branch_protection_rules.py
 ```
