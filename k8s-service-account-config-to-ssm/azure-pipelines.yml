@@ -45,9 +45,7 @@ stages:
           - bash: |
               env | sort
               poetry run python --version
-              KUBECTL_VERSION=1.21.8
-              BUILD_ARCHITECTURE=x86_64
-              curl -Ls https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/${BUILD_ARCHITECTURE_ARCH}/kubectl -o kubectl
+              curl -Ls https://storage.googleapis.com/kubernetes-release/release/v1.21.8/bin/linux/amd64/kubectl -o kubectl
               chmod +x ./kubectl
               ./kubectl get nodes -o wide
               #poetry run python ./kube_config_generator.py -r $ROOTID -a $ACCOUNTID
