@@ -36,7 +36,7 @@ stages:
               echo "##vso[task.setvariable variable=AWS_PROFILE]saml"
             displayName: Download Kube Config
           - bash: |
-              saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
+              saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt --verbose
               cat ~/.aws/credentials
             displayName: Configure SAML2AWS
             env:
