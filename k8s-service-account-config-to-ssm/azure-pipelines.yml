@@ -37,7 +37,11 @@ stages:
             displayName: Download Kube Config
           - bash: |
               saml2aws --verbose configure --idp-provider ADFS --mfa Auto --skip-prompt
-              cat $AWS_SHARED_CREDENTIALS_FILE
+              echo $AWS_SHARED_CREDENTIALS_FILE
+              find / -type f -iname "credentials" || true
+              echo NEW_SEARCH
+              find / -type f -name credentials || true
+              exit 1
             displayName: Configure SAML2AWS
             env:
               SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
