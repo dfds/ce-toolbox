@@ -36,14 +36,12 @@ stages:
               echo "##vso[task.setvariable variable=AWS_PROFILE]saml"
             displayName: Download Kube Config
           - bash: |
-              id
-              pwd
-              echo $HOME
-              touch $HOME/lala
               saml2aws --verbose configure --idp-provider ADFS --mfa Auto --skip-prompt
             displayName: Configure SAML2AWS
             env:
               SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
+              AWS_CONFIG_FILE: $(HOME)/.aws/config
+              AWS_SHARED_CREDENTIALS_FILE: $(HOME)/.aws/credentials
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
@@ -61,3 +59,5 @@ stages:
             env:
               ROOTID: $(RootID)
               ACCOUNTID: $(AccountID)
+              AWS_CONFIG_FILE: $(HOME)/.aws/config
+              AWS_SHARED_CREDENTIALS_FILE: $(HOME)/.aws/credentials
