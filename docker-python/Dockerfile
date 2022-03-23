@@ -45,7 +45,7 @@ RUN curl -L "https://github.com/Versent/saml2aws/releases/download/v${SAML2AWS_V
 # Create directory for common use
 # ========================================
 
-RUN mkdir -p /data && chmod 777 /data
+RUN mkdir -p /home/vsts_azpcontainer && chmod 777 /home/vsts_azpcontainer
 
 # ========================================
 # END
