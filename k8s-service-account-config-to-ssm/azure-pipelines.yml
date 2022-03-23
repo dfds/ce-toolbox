@@ -45,8 +45,8 @@ stages:
             displayName: Configure SAML2AWS
             env:
               SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
-              AWS_CONFIG_FILE: /home/vsts_azpcontainer/.aws/config
-              AWS_SHARED_CREDENTIALS_FILE: /home/vsts_azpcontainer/.aws/credentials
+              AWS_CONFIG_FILE: /data/.aws/config
+              AWS_SHARED_CREDENTIALS_FILE: /data/.aws/credentials
           - bash: poetry install
             workingDirectory: ./k8s-service-account-config-to-ssm/
             displayName: "Initialise Poetry"
@@ -64,5 +64,5 @@ stages:
             env:
               ROOTID: $(RootID)
               ACCOUNTID: $(AccountID)
-              AWS_CONFIG_FILE: /home/vsts_azpcontainer/.aws/config
-              AWS_SHARED_CREDENTIALS_FILE: /home/vsts_azpcontainer/.aws/credentials
+              AWS_CONFIG_FILE: /data/.aws/config
+              AWS_SHARED_CREDENTIALS_FILE: /data/.aws/credentials
