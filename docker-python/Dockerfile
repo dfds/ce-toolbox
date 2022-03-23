@@ -45,8 +45,7 @@ RUN curl -L "https://github.com/Versent/saml2aws/releases/download/v${SAML2AWS_V
 # Create directory for common use
 # ========================================
 
-mkdir -p /data
-chmod 777 /data
+RUN mkdir -p /data && chmod 777 /data
 
 # ========================================
 # END
