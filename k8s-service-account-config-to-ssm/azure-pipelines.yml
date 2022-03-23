@@ -19,7 +19,7 @@ stages:
   - stage: CI
     displayName: "Continuous Integration"
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: "ubuntu-18.04"
 
     jobs:
       - job: exec_script
