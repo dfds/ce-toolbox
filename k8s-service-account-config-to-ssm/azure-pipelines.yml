@@ -35,7 +35,13 @@ stages:
               echo "##vso[task.setvariable variable=KUBECONFIG]$LOCAL_FILE"
               echo "##vso[task.setvariable variable=AWS_PROFILE]saml"
             displayName: Download Kube Config
-          - bash: saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
+          - bash: |
+              saml2aws configure --idp-provider ADFS --mfa Auto --skip-prompt
+              saml2aws login --role=${AWS_ROLE_CLOUD_ADMIN} --force --skip-prompt
+              cat ~/.aws/credentials || true
+              curl -Ls https://storage.googleapis.com/kubernetes-release/release/v1.21.8/bin/linux/amd64/kubectl -o kubectl
+              chmod +x ./kubectl
+              ./kubectl get nodes -o wide
             displayName: Configure SAML2AWS
             env:
               SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
