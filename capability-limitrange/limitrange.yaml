@@ -12,7 +12,9 @@ spec:
         memory: 64Mi
         cpu: 20m
       max:
+        cpu: 4000m
         memory: 16Gi
     - type: Pod
       max:
+        cpu: 4000m
         memory: 16Gi
