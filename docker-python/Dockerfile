@@ -1,5 +1,5 @@
 # ========================================
-#REATE UPDATED BASE IMAGE
+#CREATE UPDATED BASE IMAGE
 # ========================================
 
 FROM python:3.9 AS base
