@@ -28,7 +28,7 @@ async fn main() {
         }
         for key in &keys {
             println!("Key: {}", key.title);
-            println!("Url: {}", key.url);
+            println!("Url: https://github.com/dfds/{}/settings/keys", repo.name);
         }
 
         if keys.len() > 0 {
