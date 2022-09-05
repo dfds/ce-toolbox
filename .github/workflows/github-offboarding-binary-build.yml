@@ -1,0 +1,160 @@
+name: github offboarding tool - Binary builds
+
+on:
+  push:
+    paths:
+      - 'offboarding/github/**'
+      - '.github/workflows/github-offboarding-binary-build.yml'
+  workflow_dispatch:
+    inputs:
+      build_linux:
+        default: false
+        required: false
+        type: boolean
+        description: "Trigger Linux builds"
+      build_darwin:
+        default: false
+        required: false
+        type: boolean
+        description: "Trigger Darwin builds"
+      build_windows:
+        default: false
+        required: false
+        type: boolean
+        description: "Trigger Windows builds"
+
+jobs:
+  macos_build: #TODO: Add cache, notarise binaries
+    name:  '01 - macOS'
+    runs-on: [macos-12]
+    if: |
+      github.event.inputs.build_darwin == 'true'
+    strategy:
+      matrix:
+        arch: ['x86_64', 'aarch64']
+    defaults:
+      run:
+        shell: bash
+        working-directory: offboarding/github
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Setup Cargo'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 'stable'
+          targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+      # - name: 'Restore ccache from cache'
+      #   id: cargo-cache
+      #   uses: actions/cache@v3
+      #   env:
+      #     CACHE_NAME: 'cargo-cache'
+      #   with:
+      #     path: ${{ github.workspace }}/.cargo
+      #     key: ${{ runner.os }}-pr-${{ env.CACHE_NAME }}-${{ matrix.arch }}
+      - name: 'Build application'
+        run: 'cargo build --release --target ${{ matrix.arch }}-apple-darwin'
+      - name: 'Create build artifact'
+        if: ${{ success() }}
+        run: |
+          cp target/${{ matrix.arch }}-apple-darwin/release/github-offboarding target/${{ matrix.arch }}-apple-darwin/release/github-offboarding-${{ matrix.arch }}-apple-darwin
+      - name: 'Upload build artifact'
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'github-offboarding-darwin-${{ matrix.arch }}-${{ github.sha }}'
+          path: '${{ github.workspace }}/offboarding/github/target/${{ matrix.arch }}-apple-darwin/release/github-offboarding-${{ matrix.arch }}-apple-darwin'
+  windows_build: #TODO: Add cache
+    name:  '01 - Windows'
+    runs-on: [windows-2022]
+    if: |
+      github.event.inputs.build_windows == 'true'
+    defaults:
+      run:
+        working-directory: offboarding/github
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Setup Cargo'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 'stable'
+          targets: 'x86_64-pc-windows-msvc'
+      - name: 'Build application'
+        run: 'cargo build --release --target x86_64-pc-windows-msvc'
+      - name: 'Create build artifact'
+        if: ${{ success() }}
+        run: |
+          cp target/x86_64-pc-windows-msvc/release/github-offboarding.exe target/x86_64-pc-windows-msvc/release/github-offboarding-x86_64-pc-windows-msvc.exe
+      - name: 'Upload build artifact'
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'github-offboarding-windows-x86_64-${{ github.sha }}'
+          path: '${{ github.workspace }}/offboarding/github/target/x86_64-pc-windows-msvc/release/github-offboarding-x86_64-pc-windows-msvc.exe'
+  linux_build: #TODO: Add cache
+    name:  '01 - Linux'
+    runs-on: [ubuntu-20.04]
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.build_linux == 'true'
+    strategy:
+      matrix:
+        arch: ['x86_64', 'aarch64']
+    defaults:
+      run:
+        shell: bash
+        working-directory: offboarding/github
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Setup Cargo'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 'stable'
+          targets: 'x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu'
+      - name: 'Set up build dependencies'
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y --allow-downgrades --allow-change-held-packages --allow-remove-essential install libssl-dev build-essential checkinstall zlib1g-dev openssl libssl-dev pkg-config libdbus-1-dev
+      # - name: 'Set up build dependencies arm64'
+      #   if: matrix.arch == 'aarch64'
+      #   run: |
+      #     sudo apt-get -y remove checkinstall
+      - uses: ryankurte/action-apt@v0.3.0
+        name: 'Set up build dependencies - arm64'
+        if: matrix.arch == 'aarch64'
+        with:
+          arch: arm64
+          packages: "libssl-dev:arm64 libdbus-1-dev:arm64 zlib1g-dev:arm64 gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-arm64-cross libc6-dev-arm64-cross checkinstall pkg-config"
+      # - name: 'Set up build dependencies - arm64'
+      #   if: matrix.arch == 'aarch64'
+      #   run: |
+      #     sudo apt-get -y install libssl-dev:arm64 pkg-config:arm64 libdbus-1-dev:arm64 checkinstall:arm64 zlib1g-dev:arm64 gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-arm64-cross libc6-dev-arm64-cross
+      - name: 'Set up build variables - arm64'
+        if: matrix.arch == 'aarch64'
+        run: |
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          export OPENSSL_INCLUDE_DIR=/usr/include/openssl/
+          export OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu/
+          export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig/
+          export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu/
+      - name: 'Build application arm64'
+        run: 'cargo build --release --target ${{ matrix.arch }}-unknown-linux-gnu'
+        if: matrix.arch == 'aarch64'
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          OPENSSL_INCLUDE_DIR: /usr/include/openssl/
+          OPENSSL_LIB_DIR: /usr/lib/aarch64-linux-gnu/
+          PKG_CONFIG_PATH: /usr/lib/aarch64-linux-gnu/pkgconfig/
+          PKG_CONFIG_SYSROOT_DIR: /usr/aarch64-linux-gnu/
+      - name: 'Build application x86'
+        if: matrix.arch == 'x86_64'
+        run: 'cargo build --release --target ${{ matrix.arch }}-unknown-linux-gnu'
+      - name: 'Create build artifact'
+        if: ${{ success() }}
+        run: |
+          cp target/${{ matrix.arch }}-unknown-linux-gnu/release/github-offboarding target/${{ matrix.arch }}-unknown-linux-gnu/release/github-offboarding-${{ matrix.arch }}-unknown-linux-gnu
+      - name: 'Upload build artifact'
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'github-offboarding-linux-${{ matrix.arch }}-${{ github.sha }}'
+          path: '${{ github.workspace }}/offboarding/github/target/${{ matrix.arch }}-unknown-linux-gnu/release/github-offboarding-${{ matrix.arch }}-unknown-linux-gnu'
