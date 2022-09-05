@@ -1,3 +1,6 @@
+extern crate core;
+
+use futures::FutureExt;
 use octocrab::{Octocrab, Error};
 use serde::{Serialize, Deserialize};
 
@@ -21,45 +24,87 @@ async fn main() {
         current_page = new_page;
     }
     println!(":: DEPLOY KEYS ::");
+    let mut key_futures = Vec::new();
     for repo in &prs {
-        let keys = get_key(octo.clone(), repo.name.clone()).await.unwrap();
-        if keys.len() > 0 {
-            println!("{}", repo.name);
-        }
-        for key in &keys {
-            println!("Key: {}", key.title);
-            println!("Url: https://github.com/dfds/{}/settings/keys", repo.name);
-        }
+        let fut = get_key(octo.clone(), repo.name.clone());
+        key_futures.push(fut.boxed());
+    }
+    let keys_results = futures::future::join_all(key_futures).await;
 
-        if keys.len() > 0 {
-            println!("\n");
+    for future_result in keys_results {
+        match future_result {
+            Ok(val) => {
+                if val.data.len() > 0 {
+                    for key in val.data {
+                        println!("Key: {}", key.title);
+                        println!("Url: https://github.com/dfds/{}/settings/keys", val.repo_name);
+                    }
+                    println!("\n");
+                }
+            },
+            Err(err) => {
+                panic!(err);
+            }
         }
     }
 
     println!(":: Repository users ::");
+    let mut users_futures = Vec::new();
     for repo in &prs {
-        let collabs = get_collaborators(octo.clone(), repo.name.clone()).await.unwrap();
-        if collabs.len() > 0 {
-            println!("{}", repo.name);
-        }
-        for collab in &collabs {
-            println!("Username: {}", collab.login);
-        }
+        let fut = get_collaborators(octo.clone(), repo.name.clone());
+        users_futures.push(fut.boxed());
+    }
+    let users_results = futures::future::join_all(users_futures).await;
 
-        if collabs.len() > 0 {
-            println!("\n");
+    for future_result in users_results {
+        match future_result {
+            Ok(val) => {
+                if val.data.len() > 0 {
+                    println!("Repo: {}", val.repo_name);
+                    for repo_user in val.data {
+                        println!("Username: {}", repo_user.login);
+                    }
+                    println!("\n");
+                }
+            },
+            Err(err) => {
+                panic!(err);
+            }
         }
     }
 }
 
-async fn get_key(octo : Octocrab, repo_name : String) -> Result<Vec<Key>, Error> {
+async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<Key>>, Error> {
     let route = format!("/repos/dfds/{}/keys", repo_name);
-    octo.get(route, None::<&()>).await
+    let resp : Result<Vec<Key>, Error> = octo.get(route, None::<&()>).await;
+    return match resp {
+        Ok(val) => {
+            Ok(OctoFutureResp {
+                repo_name: repo_name.clone(),
+                data: val
+            })
+        },
+        Err(err) => Err(err)
+    }
 }
 
-async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<Vec<RepoCollaborator>, Error> {
+async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<RepoCollaborator>>, Error> {
     let route = format!("/repos/dfds/{}/collaborators?affiliation=direct", repo_name);
-    octo.get(route, None::<&()>).await
+    let resp = octo.get(route, None::<&()>).await;
+    return match resp {
+        Ok(val) => {
+            Ok(OctoFutureResp {
+                repo_name: repo_name.clone(),
+                data: val
+            })
+        },
+        Err(err) => Err(err)
+    }
+}
+
+pub struct OctoFutureResp<T> {
+    data : T,
+    repo_name : String
 }
 
 #[derive(Serialize, Deserialize)]
