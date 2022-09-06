@@ -5,6 +5,8 @@ use futures::FutureExt;
 use octocrab::{Octocrab, Error};
 use octocrab::models::App;
 use serde::{Serialize, Deserialize};
+use std::fs::File;
+use std::io::{Error as IoError, Write};
 
 #[tokio::main]
 async fn main() {
@@ -89,38 +91,53 @@ async fn main() {
 
 
     // Print report
-    for (k, repo) in repos {
-        if repo.is_empty() {
-            continue;
-        }
-        println!("{}", k);
-
-        if repo.keys.len() > 0 {
-            println!("  Deploy keys:");
-            for key in repo.keys {
-                println!("    Title        : {}", key.title);
-                println!("    Added by     : {}", key.added_by);
-                println!("    Creator URL  : https://github.com/{}", key.added_by);
-                println!("    Created at   : {}", key.created_at);
-                println!("    Last used    : {}", key.last_used);
-                print!("\n");
+    if repos.len() > 0 {
+        let mut users_file = File::create("report_users.csv").unwrap();
+        let mut deploy_keys_file = File::create("report_keys.csv").unwrap();
+        write!(users_file, "repository,username,url\n").unwrap();
+        write!(deploy_keys_file, "repository,title,added_by,creator_url,created_at,last_used\n").unwrap();
+        for (k, repo) in repos {
+            if repo.is_empty() {
+                continue;
             }
-        }
+            println!("{}", k);
 
-        if repo.repo_users.len() > 0 {
-            println!("  Users:");
-            for user in repo.repo_users {
-                println!("    Username: {}", user.login);
-                println!("    URL     : {}", user.html_url);
+            if repo.keys.len() > 0 {
+                println!("  Deploy keys:");
+                for key in repo.keys {
+                    println!("    Title        : {}", key.title);
+                    println!("    Added by     : {}", key.added_by);
+                    println!("    Creator URL  : https://github.com/{}", key.added_by);
+                    println!("    Created at   : {}", key.created_at);
+                    println!("    Last used    : {}", key.last_used);
+                    print!("\n");
+                    write!(deploy_keys_file, "{},\"{}\",{},https://github.com/{},{},{}\n", k, key.title, key.added_by, key.added_by, key.created_at, key.last_used).unwrap();
+                }
             }
+
+            if repo.repo_users.len() > 0 {
+                println!("  Users:");
+                for user in repo.repo_users {
+                    println!("    Username: {}", user.login);
+                    println!("    URL     : {}", user.html_url);
+                    write!(users_file, "{},{},{}\n", k, user.login, user.html_url).unwrap();
+                }
+            }
+
         }
     }
 
+
     if repos_with_permission_issues.len() > 0 {
+        let mut file = File::create("report_permission_issues.csv").unwrap();
+        write!(file, "repository\n").unwrap();
+
         println!("Unable to check the following repositories due to permission issues:");
         for (k, i) in repos_with_permission_issues {
             println!(" - {} (https://github.com/{})", k, k);
+            write!(file, "{}\n", k).unwrap();
         }
+
     }
 
 }
