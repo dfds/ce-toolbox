@@ -43,7 +43,7 @@ async fn main() {
                 }
             },
             Err(err) => {
-                panic!(err);
+                octo_error_handler(err, "deploy keys")
             }
         }
     }
@@ -68,8 +68,31 @@ async fn main() {
                 }
             },
             Err(err) => {
-                panic!(err);
+                octo_error_handler(err, "users directly attached")
             }
+        }
+    }
+}
+
+fn octo_error_handler(err : Error, category : &str) {
+    match &err {
+        Error::Http { source, backtrace } => {
+            match source.status() {
+                Some(status_code) => {
+                    if status_code.as_u16() == 404 {
+                        println!("Unable to query repo {} for {}. This is likely a permissions issue. Skipping.", source.url().unwrap().path(), category)
+                    }
+                },
+                None => {
+                    println!("{:?}", err);
+                    panic!("Unable to proceed.")
+                }
+            }
+        }
+        Error::Other { source, backtrace } => {},
+        _ => {
+            println!("{:?}", err);
+            panic!("Unable to proceed.")
         }
     }
 }
