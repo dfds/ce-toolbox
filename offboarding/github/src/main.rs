@@ -1,11 +1,15 @@
 extern crate core;
 
+use std::collections::HashMap;
 use futures::FutureExt;
 use octocrab::{Octocrab, Error};
+use octocrab::models::App;
 use serde::{Serialize, Deserialize};
 
 #[tokio::main]
 async fn main() {
+    let mut repos : HashMap<String, RepoContainer> = HashMap::new();
+    let mut repos_with_permission_issues : HashMap<String, i8> = HashMap::new();
     let octo = Octocrab::builder()
         .personal_token(std::env::var("GITHUB_TOKEN").expect("No GITHUB_TOKEN environment variable was found"))
         .build().expect("Unable to build Octocrab client");
@@ -23,7 +27,7 @@ async fn main() {
         prs.extend(new_page.take_items());
         current_page = new_page;
     }
-    println!(":: DEPLOY KEYS ::");
+    // Deploy keys
     let mut key_futures = Vec::new();
     for repo in &prs {
         let fut = get_key(octo.clone(), repo.name.clone());
@@ -35,20 +39,25 @@ async fn main() {
         match future_result {
             Ok(val) => {
                 if val.data.len() > 0 {
-                    for key in val.data {
-                        println!("Key: {}", key.title);
-                        println!("Url: https://github.com/dfds/{}/settings/keys", val.repo_name);
+                    if !repos.contains_key(&val.repo_name) {
+                        repos.insert(val.repo_name.clone(), RepoContainer::new());
                     }
-                    println!("\n");
+                    let mut repo_container = repos.get_mut(&val.repo_name).unwrap();
+                    for key in val.data {
+                        repo_container.keys.push(key);
+                    }
                 }
             },
             Err(err) => {
-                octo_error_handler(err, "deploy keys")
+                let perm_issue = octo_error_handler(err.octo_error);
+                if perm_issue.is_some() {
+                    repos_with_permission_issues.insert(err.repo.clone(), 1);
+                }
             }
         }
     }
 
-    println!(":: Repository users ::");
+    // Repo users
     let mut users_futures = Vec::new();
     for repo in &prs {
         let fut = get_collaborators(octo.clone(), repo.name.clone());
@@ -60,44 +69,90 @@ async fn main() {
         match future_result {
             Ok(val) => {
                 if val.data.len() > 0 {
-                    println!("Repo: {}", val.repo_name);
-                    for repo_user in val.data {
-                        println!("Username: {}", repo_user.login);
+                    if !repos.contains_key(&val.repo_name) {
+                        repos.insert(val.repo_name.clone(), RepoContainer::new());
                     }
-                    println!("\n");
+                    let mut repo_container = repos.get_mut(&val.repo_name).unwrap();
+                    for repo_user in val.data {
+                        repo_container.repo_users.push(repo_user);
+                    }
                 }
             },
             Err(err) => {
-                octo_error_handler(err, "users directly attached")
+                let perm_issue = octo_error_handler(err.octo_error);
+                if perm_issue.is_some() {
+                    repos_with_permission_issues.insert(err.repo.clone(), 1);
+                }
             }
         }
     }
+
+
+    // Print report
+    for (k, repo) in repos {
+        if repo.is_empty() {
+            continue;
+        }
+        println!("{}", k);
+
+        if repo.keys.len() > 0 {
+            println!("  Deploy keys:");
+            for key in repo.keys {
+                println!("    Title: {}", key.title);
+                print!("\n");
+            }
+        }
+
+        if repo.repo_users.len() > 0 {
+            println!("  Users:");
+            for user in repo.repo_users {
+                println!("    Username: {}", user.login);
+            }
+        }
+    }
+
+    if repos_with_permission_issues.len() > 0 {
+        println!("Unable to check the following repositories due to permission issues:");
+        for (k, i) in repos_with_permission_issues {
+            println!(" - {}", k);
+        }
+    }
+
 }
 
-fn octo_error_handler(err : Error, category : &str) {
+fn octo_error_handler(err : Error) -> Option<()> {
+    let mut panic_time = false;
     match &err {
         Error::Http { source, backtrace } => {
             match source.status() {
                 Some(status_code) => {
-                    if status_code.as_u16() == 404 {
-                        println!("Unable to query repo {} for {}. This is likely a permissions issue. Skipping.", source.url().unwrap().path(), category)
+                    if status_code.as_u16() == 404 || status_code.as_u16() == 403 {
+                        //println!("Unable to query repo {} for {}. This is likely a permissions issue. Skipping.", source.url().unwrap().path(), category)
+                        return Some(());
+                    } else {
+                        panic_time = true;
                     }
                 },
                 None => {
-                    println!("{:?}", err);
-                    panic!("Unable to proceed.")
+                    panic_time = true;
                 }
             }
         }
         Error::Other { source, backtrace } => {},
         _ => {
-            println!("{:?}", err);
-            panic!("Unable to proceed.")
+            panic_time = true;
         }
     }
+
+    if panic_time {
+        println!("{:?}", err);
+        panic!("Unable to proceed.");
+    }
+
+    None
 }
 
-async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<Key>>, Error> {
+async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<Key>>, AppError> {
     let route = format!("/repos/dfds/{}/keys", repo_name);
     let resp : Result<Vec<Key>, Error> = octo.get(route, None::<&()>).await;
     return match resp {
@@ -107,11 +162,14 @@ async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<V
                 data: val
             })
         },
-        Err(err) => Err(err)
+        Err(err) => Err(AppError {
+            repo: repo_name.clone(),
+            octo_error: err
+        })
     }
 }
 
-async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<RepoCollaborator>>, Error> {
+async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<RepoCollaborator>>, AppError> {
     let route = format!("/repos/dfds/{}/collaborators?affiliation=direct", repo_name);
     let resp = octo.get(route, None::<&()>).await;
     return match resp {
@@ -121,7 +179,45 @@ async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<OctoFu
                 data: val
             })
         },
-        Err(err) => Err(err)
+        Err(err) => Err(AppError {
+            repo: repo_name.clone(),
+            octo_error: err
+        })
+    }
+}
+
+struct RepoContainer {
+    keys : Vec<Key>,
+    repo_users : Vec<RepoCollaborator>
+}
+
+impl RepoContainer {
+    pub fn new() -> Self {
+        Self {
+            keys: Vec::new(),
+            repo_users: Vec::new()
+        }
+    }
+}
+
+struct AppError {
+    repo : String,
+    octo_error : octocrab::Error
+}
+
+impl RepoContainer {
+    pub fn is_empty(&self) -> bool {
+        let mut empty = true;
+
+        if self.keys.len() > 0 {
+            empty = false;
+        }
+
+        if self.repo_users.len() > 0 {
+            empty = false;
+        }
+
+        empty
     }
 }
 
