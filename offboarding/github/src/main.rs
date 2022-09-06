@@ -98,7 +98,11 @@ async fn main() {
         if repo.keys.len() > 0 {
             println!("  Deploy keys:");
             for key in repo.keys {
-                println!("    Title: {}", key.title);
+                println!("    Title        : {}", key.title);
+                println!("    Added by     : {}", key.added_by);
+                println!("    Creator URL  : https://github.com/{}", key.added_by);
+                println!("    Created at   : {}", key.created_at);
+                println!("    Last used    : {}", key.last_used);
                 print!("\n");
             }
         }
@@ -107,6 +111,7 @@ async fn main() {
             println!("  Users:");
             for user in repo.repo_users {
                 println!("    Username: {}", user.login);
+                println!("    URL     : {}", user.html_url);
             }
         }
     }
@@ -114,7 +119,7 @@ async fn main() {
     if repos_with_permission_issues.len() > 0 {
         println!("Unable to check the following repositories due to permission issues:");
         for (k, i) in repos_with_permission_issues {
-            println!(" - {}", k);
+            println!(" - {} (https://github.com/{})", k, k);
         }
     }
 
@@ -234,7 +239,9 @@ pub struct Key {
     pub title : String,
     pub verified : bool,
     pub created_at : String,
-    pub read_only : bool
+    pub last_used : String,
+    pub read_only : bool,
+    pub added_by : String
 }
 
 #[derive(Serialize, Deserialize)]
