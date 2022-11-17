@@ -1,1 +1,1 @@
-This script will cycle through directories looking for a supplied resource and remove it from terraform state using the terragrunt exe
+This script will cycle through supplied directory's subdirectories looking for a supplied resource in the terraform state and remove it from terraform state using the terragrunt state rm
