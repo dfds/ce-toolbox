@@ -29,16 +29,18 @@ for dir in sub_directories:
     if os.path.exists(dir + "/terragrunt.hcl"):
         # FOR TESTING to avoid inadvertently breaking something. Remove this if statement for final version. Changes are only ran against
         # this directory until removed
-        if (dir == current_dir + "/ebc33fe5-48f6-4721-8554-5550378a2c8e"):
+        if (dir == current_dir + "/06cb42b0-0ffe-4074-97e3-b5800e643a39"):
             print("HCL found!")
             # Run terragrunt rm on a supplied resource
-            stream = os.popen('/usr/local/bin/terragrunt show --terragrunt-working-dir ' + dir + '| grep ' + resource)
+            print("Attempting terragrunt rm in: " + dir)
+            os.chdir(dir)
+            stream = os.popen('terragrunt show ' + '| grep ' + resource)
             output = stream.readlines()
             if (len(output) > 0):
                 print("Found " + resource + "!")
-                stream = os.popen('terragrunt state rm ' + resource + '--terragrunt-working-dir ' + dir)
-                output = stream.read()
-                print(stream)
+                stream = os.popen('terragrunt state rm ' + resource)
+                result = stream.read()
+                print(resource + "state removed!")
             else:
                 print("No resource " + resource + " found!")
 
