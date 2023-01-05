@@ -21,7 +21,7 @@ TEMPLATE_ROOT=${SCRIPT_ROOT}/.eks-sandbox-template
 if [[ -f "${SANDBOX_ROOT}/sandbox-vars-${EKS_CLUSTER_NAME}.sh" ]]; then
     VARS_FILE=${SANDBOX_ROOT}/sandbox-vars-${EKS_CLUSTER_NAME}.sh
 else
-    VARS_FILE=s${SCRIPT_ROOT}/sandbox-vars-example.sh
+    VARS_FILE=${SCRIPT_ROOT}/sandbox-vars-example.sh
 fi
 
 source "${VARS_FILE}"
