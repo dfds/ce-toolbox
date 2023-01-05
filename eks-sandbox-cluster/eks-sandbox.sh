@@ -18,8 +18,13 @@ fi
 TEMPLATE_ROOT=${SCRIPT_ROOT}/.eks-sandbox-template
 
 # Load variables
-VARS_FILE=${SANDBOX_ROOT}/sandbox-vars-${EKS_CLUSTER_NAME}.sh
-. "${VARS_FILE}"
+if [[ -f "${SANDBOX_ROOT}/sandbox-vars-${EKS_CLUSTER_NAME}.sh" ]]; then
+    VARS_FILE=${SANDBOX_ROOT}/sandbox-vars-${EKS_CLUSTER_NAME}.sh
+else
+    VARS_FILE=s${SCRIPT_ROOT}/sandbox-vars-example.sh
+fi
+
+source "${VARS_FILE}"
 
 # Define paths to template and sandbox
 TEMPLATE_DIR=${TEMPLATE_ROOT}/oxygen-account/eu-west-1/k8s-hellman/
