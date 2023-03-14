@@ -1,11 +1,17 @@
+# :warning: Not required after 1st May 2023 :warning:
+
+Please note that this tool will no longer be required after 1st May 2023 but may serve as a useful 
+reference. It will be removed after this date.
+
+
 # Update federation metadata
 This repository contains a script for bulk update federation metadata for all accounts.
 
 # Quick start
-Login with saml2aws
+Login with go-aws-sso
 
 ```bash
-saml2aws login --force
+go-aws-sso -p saml
 export AWS_PROFILE=saml
 ```
 
