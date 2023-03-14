@@ -31,15 +31,14 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 
 # ========================================
-# SAML2AWS
+# GO-AWS-SSO
 # ========================================
 
-ENV SAML2AWS_VERSION=2.20.0
-
-RUN curl -L "https://github.com/Versent/saml2aws/releases/download/v${SAML2AWS_VERSION}/saml2aws_${SAML2AWS_VERSION}_linux_amd64.tar.gz" -o saml2aws.tar.gz \
-    && tar -zxvf saml2aws.tar.gz \
-    && rm saml2aws.tar.gz \
-    && mv saml2aws /usr/local/bin/
+ENV GAS_VERSION=1.3.0
+ENV GAS_OS_ARCH=amd64
+RUN curl -Lo gas.tar.gz https://github.com/theurichde/go-aws-sso/releases/download/v${GAS_VERSION}/go-aws-sso_${GAS_VERSION}_linux_${GAS_OS_ARCH}.tar.gz \
+    && tar zxvf gas.tar.gz && rm gas.tar.gz \
+    && mv go-aws-sso /usr/local/bin
 
 # ========================================
 # END
