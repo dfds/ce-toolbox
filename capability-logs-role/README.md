@@ -26,7 +26,7 @@ The following tokens are replaced:
 
 ### AWS profile prerequisite
 
-Setup an AWS profile assuming the `OrgRole` in the logs account, using the credentials from the `saml` profile (which is updated by `saml2aws`).
+Setup an AWS profile assuming the `OrgRole` in the logs account, using the credentials from the `saml` profile (which is updated by `go-aws-sso -p saml`).
 
 This is done by adding a block like this to `~/.aws/config`:
 
@@ -38,7 +38,7 @@ source_profile = saml
 
 ### Steps
 
-1. Login as admin to the main AWS account using `saml2aws`
+1. Login as admin to the main AWS account using `go-aws-sso -p saml`
 2. Export the `AWS_PROFILE` environment variable setting it to the name used above (e.g. `dfds-logs-orgrole`)
 3. Execute the bash script to create the AWS IAM role and attach the policy, specifying the capability root id, e.g.: `./create-logs-capability-role.sh dynamic-forms-dxp-enxjg` (no validation on capability root id)
 4. Execute the PowerShell command as output by the script above, on a computer with AD PoSH module installed, e.g. `./create-logs-capability-adgroup.ps1 -CapabilityRootId dynamic-forms-dxp-enxjg -AccountId 736359295931`
