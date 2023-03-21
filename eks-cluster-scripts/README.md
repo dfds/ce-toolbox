@@ -3,7 +3,7 @@
 In order to use the proper encryption when communicating with the cluster, it is also required that the extension-apiserver-authentication configmap includes the client certificate. Currently on EKS, Amazon does not add this automatically.
 
 The certificate can be extracted with the `GetCert.ps1` script.
- - Use saml2aws and assume Account: `dfds (454234050858) / ADFS-Admin`
+ - Use `go-aws-sso -p saml` and assume the admin role in the organization master account
  - Export AWS_PROFILE=saml
  - Run the `GetCert.ps1` script
 
