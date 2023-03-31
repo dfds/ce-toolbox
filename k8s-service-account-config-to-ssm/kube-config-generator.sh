@@ -27,7 +27,7 @@ KUBE_SECRET_NAME=$(kubectl -n kube-system get sa $SERVICE_ACCOUNT_NAME -o=jsonpa
 KUBE_TOKEN=$(kubectl -n kube-system get secret $KUBE_SECRET_NAME -o=jsonpath="{.data.token}" | base64 --decode)
 KUBE_CONFIG=$(sed "s/KUBE_TOKEN/${KUBE_TOKEN}/g" config.template | sed "s/NAMESPACE_REPLACE/${NAMESPACE}/g")
 
-# SAML2AWS Connection
+# go-aws-sso Connection
 SAML_ROLE="CloudAdmin"
 SAML_ACCOUNT="454234050858"
 go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE
