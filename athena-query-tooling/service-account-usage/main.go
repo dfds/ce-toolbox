@@ -86,21 +86,23 @@ func DownloadFile(bucketName string, objectKey string, fileName string) (file st
 	})
 	if err != nil {
 		log.Printf("Couldn't get object %v:%v. Here's why: %v\n", bucketName, objectKey, err)
-		return err
+		return "", err
 	}
 	defer result.Body.Close()
-	file, err := os.Create(fileName)
+
+	var f *os.File
+	f, err = os.Create(fileName)
 	if err != nil {
 		log.Printf("Couldn't create file %v. Here's why: %v\n", fileName, err)
-		return err
+		return "", err
 	}
-	defer file.Close()
+	defer f.Close()
 	body, err := io.ReadAll(result.Body)
 	if err != nil {
 		log.Printf("Couldn't read object body from %v. Here's why: %v\n", objectKey, err)
 	}
-	_, err = file.Write(body)
-	return err
+	_, err = f.Write(body)
+	return f.Name(), err
 }
 
 func runAthenaQuery(acc string) (id string, err error) {
