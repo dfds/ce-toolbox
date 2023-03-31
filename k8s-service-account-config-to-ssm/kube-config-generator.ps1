@@ -35,11 +35,12 @@ $AwsRegion = 'eu-central-1'
 $AwsParameterName = '/managed/deploy/kube-config'
 $AwsProfile = "saml"
 
-# SAML2AWS Connection
-$SamlRole = "arn:aws:iam::738063116313:role/CloudAdmin"
-saml2aws login --role=$SamlRole --force --skip-prompt
+# go-aws-sso Connection
+$SamlRole = "CloudAdmin"
+$SamlAccount = "738063116313"
+go-aws-sso assume --role-name $SamlRole --account-id $SamlAccount -p $AwsProfile
 
-# Generate kube toke and config for service account
+# Generate kube token and config for service account
 $ENV:AWS_PROFILE = $AwsProfile
 kubectl --namespace $ServiceAccountNamespace create serviceaccount $ServiceAccountName
 kubectl --namespace $Namespace create rolebinding $ServiceAccountName --role=$Kuberole --serviceaccount=${ServiceAccountNamespace}:${ServiceAccountName}
@@ -50,9 +51,10 @@ $KubeToken = $(kubectl --namespace $ServiceAccountNamespace get secret $KubeSecr
 $KubeConfigTemplate = Get-Content (Join-Path $ScriptRoot 'config.template') -Raw
 $KubeConfig = $KubeConfigTemplate -replace 'NAMESPACE_REPLACE', $Namespace -replace 'KUBE_TOKEN', $KubeToken
 
-# SAML2AWS Connection
-$SamlRole = "arn:aws:iam::454234050858:role/ADFS-Admin"
-saml2aws login --role=$SamlRole --force --skip-prompt
+# go-aws-sso Connection
+$SamlRole = "CloudAdmin"
+$SamlAccount = "454234050858"
+go-aws-sso assume --role-name $SamlRole --account-id $SamlAccount -p $AwsProfile
 
 # Assume role
 Set-DefaultAWSRegion -Region $AwsRegion
