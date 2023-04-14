@@ -10,6 +10,7 @@ fi
 CAPABILITY_ROOT_ID=$ROOT_ID
 NAMESPACE=$CAPABILITY_ROOT_ID
 SERVICE_ACCOUNT_NAME="$CAPABILITY_ROOT_ID-vstsuser"
+SECRET_NAME="$CAPABILITY_ROOT_ID-vstsuser-token"
 KUBE_ROLE="$CAPABILITY_ROOT_ID-fullaccess"
 CAPABILITY_AWS_ACCOUNT_ID=$ACCOUNT_ID
 CAPABILITY_AWS_ROLE_SESSION="kube-config-paramstore"
@@ -20,11 +21,22 @@ SAML_ROLE="CloudAdmin"
 SAML_ACCOUNT="738063116313"
 go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE
 
-# Generate kube toke and config for service account
+# Generate kube token and config for service account
 kubectl create serviceaccount --namespace kube-system $SERVICE_ACCOUNT_NAME
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: $SECRET_NAME
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: $SERVICE_ACCOUNT_NAME
+type: kubernetes.io/service-account-token
+EOF
+
 kubectl create rolebinding $SERVICE_ACCOUNT_NAME --role=$KUBE_ROLE --serviceaccount=kube-system:$SERVICE_ACCOUNT_NAME -n $NAMESPACE
-KUBE_SECRET_NAME=$(kubectl -n kube-system get sa $SERVICE_ACCOUNT_NAME -o=jsonpath="{.secrets[0].name}")
-KUBE_TOKEN=$(kubectl -n kube-system get secret $KUBE_SECRET_NAME -o=jsonpath="{.data.token}" | base64 --decode)
+KUBE_TOKEN=$(kubectl -n kube-system get secret $SECRET_NAME -o=jsonpath="{.data.token}" | base64 --decode)
 KUBE_CONFIG=$(sed "s/KUBE_TOKEN/${KUBE_TOKEN}/g" config.template | sed "s/NAMESPACE_REPLACE/${NAMESPACE}/g")
 
 # go-aws-sso Connection
