@@ -15,11 +15,13 @@ KUBE_ROLE="$CAPABILITY_ROOT_ID-fullaccess"
 CAPABILITY_AWS_ACCOUNT_ID=$ACCOUNT_ID
 CAPABILITY_AWS_ROLE_SESSION="kube-config-paramstore"
 AWS_PROFILE="saml"
+SSO_START_URL="https://dfds.awsapps.com/start"
+SSO_REGION="eu-west-1"
 
 # Define the SAML role to use and login with that role
 SAML_ROLE="CloudAdmin"
 SAML_ACCOUNT="738063116313"
-go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE
+go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE --start-url $SSO_START_URL --region $SSO_REGION
 
 # Generate kube token and config for service account
 kubectl create serviceaccount --namespace kube-system $SERVICE_ACCOUNT_NAME
@@ -42,7 +44,7 @@ KUBE_CONFIG=$(sed "s/KUBE_TOKEN/${KUBE_TOKEN}/g" config.template | sed "s/NAMESP
 # go-aws-sso Connection
 SAML_ROLE="CloudAdmin"
 SAML_ACCOUNT="454234050858"
-go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE
+go-aws-sso assume --role-name $SAML_ROLE --account-id $SAML_ACCOUNT -p $AWS_PROFILE --start-url $SSO_START_URL --region $SSO_REGION
 
 # Assume role
 AWS_ASSUMED_CREDS=( $(aws --profile ${AWS_PROFILE} sts assume-role \
