@@ -8,6 +8,7 @@ After creation of the file the tool automatically provisions the kubernetes conf
 * [jq](https://stedolan.github.io/jq/)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 * AWS CLI Credentials for Prime AWS Account
+* [Go AWS SSO](https://github.com/theurichde/go-aws-sso), v1.3.0 or greater.
 
 ### Getting Kubeconfig for Hellman cluster
 The Kubeconfig file for the Hellman cluster can be found in DFDS 1Password account.
