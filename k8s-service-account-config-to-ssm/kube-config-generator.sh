@@ -14,7 +14,7 @@ SECRET_NAME="$CAPABILITY_ROOT_ID-vstsuser-token"
 KUBE_ROLE="$CAPABILITY_ROOT_ID-fullaccess"
 CAPABILITY_AWS_ACCOUNT_ID=$ACCOUNT_ID
 CAPABILITY_AWS_ROLE_SESSION="kube-config-paramstore"
-AWS_PROFILE="saml"
+AWS_PROFILE="saml-assume-kube-config-generator"
 SSO_START_URL="https://dfds.awsapps.com/start"
 SSO_REGION="eu-west-1"
 
