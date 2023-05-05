@@ -42,15 +42,15 @@ func main() {
 		accounts = append(accounts, page.Accounts...)
 	}
 
-	// for _, acc := range accounts {
-	// 	fmt.Println(*acc.Id)
-	// 	result, err := runAthenaQuery(*acc.Id)
-	// 	if err != nil {
-	// 		fmt.Printf("Error running Athena Query for account %v", *acc.Id)
-	// 	}
-	// 	Ids = append(Ids, result)
-	// 	time.Sleep(time.Duration(10) * time.Second) // Try not to hit rate limiting
-	// }
+	for _, acc := range accounts {
+		fmt.Println(*acc.Id)
+		result, err := runAthenaQuery(*acc.Id)
+		if err != nil {
+			fmt.Printf("Error running Athena Query for account %v", *acc.Id)
+		}
+		Ids = append(Ids, result)
+		time.Sleep(time.Duration(10) * time.Second) // Try not to hit rate limiting
+	}
 
 	fmt.Println(Ids)
 
@@ -114,7 +114,7 @@ func runAthenaQuery(acc string) (id string, err error) {
 
 	svc := athena.New(sess, aws.NewConfig().WithRegion("eu-central-1"))
 	var s athena.StartQueryExecutionInput
-	querystring := fmt.Sprintf("SELECT useridentity.arn, eventtime FROM default.cloudtrail WHERE accountid = '%s' AND eventTime > to_iso8601(current_timestamp - interval '30' day) AND useridentity.arn LIKE '%%/s.%%'", acc)
+	querystring := fmt.Sprintf("SELECT useridentity.arn, eventtime FROM default.cloudtrail WHERE accountid = '%s' AND eventTime > to_iso8601(current_timestamp - interval '7' day) AND useridentity.arn LIKE '%%/s.%%'", acc)
 	s.SetQueryString(querystring)
 	fmt.Println(querystring)
 
