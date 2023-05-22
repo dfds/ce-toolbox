@@ -10,7 +10,7 @@ import (
 )
 
 type templateVars struct {
-	Vars map[string]string
+	Vars map[string]interface{}
 }
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("Unable to read vars.json")
 	}
 
-	var vars map[string]string
+	var vars map[string]interface{}
 	err = json.Unmarshal(varsRaw, &vars)
 	if err != nil {
 		log.Fatal("Unable to unmarsharl vars")

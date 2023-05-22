@@ -1,4 +1,9 @@
 {
   "RootId": "p-project",
-  "Count": "1"
+  "Count": "1",
+  "Entries": [
+    "i-am-broken",
+    "i-sorta-work",
+    "wow, the power of templating magic"
+  ]
 }
