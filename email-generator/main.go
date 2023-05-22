@@ -22,7 +22,7 @@ func main() {
 	var vars map[string]interface{}
 	err = json.Unmarshal(varsRaw, &vars)
 	if err != nil {
-		log.Fatal("Unable to unmarsharl vars")
+		log.Fatal("Unable to unmarshal vars")
 	}
 
 	templateRaw, err := os.ReadFile(os.Args[1])
