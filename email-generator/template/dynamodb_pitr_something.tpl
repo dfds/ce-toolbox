@@ -1,6 +1,3 @@
-Title: Capability [{{index .Vars "RootId"}}] - DynamoDB something something
-Content:
-
 Hi,
 
 You are receiving this email because you're a member of the {{index .Vars "RootId"}} Capability.
