@@ -1,5 +1,6 @@
 import subprocess
 import json
+from pathlib import Path
 #1 Run Prowler and generate a report (CSV or JSON) file for each account
   # List non-compliant Dynamodb tables along with AWS account ID
 #2 Consume CSV file with the list of capability-accounts with their AWS account ID and Capability members
@@ -19,21 +20,71 @@ def generate_report():
 
 def parse_report():
     # For each json file:'
+    returned_report_items = [] # list of objects ?
+
+    directory = './output/'
+    files = Path(directory).glob('*.json')
+
+    for file in files:
+        temp_account_id = ''
+        temp_non_compliant_dynamodb_list = []
+        temp_obj = {} # Object for each file
+        with open(file) as json_file:
+            json_data = json.load(json_file)
+            if len(json_data) != 0:
+                for v in json_data: # For each dynamodb entry
+                    if v['Status'] == 'FAIL':
+                        #print('Table name: ' + v['ResourceId'], v['AccountId'])
+                        temp_table_details = v['ResourceId']  + " " + v['Region']
+                        temp_non_compliant_dynamodb_list.append(temp_table_details)
+                        temp_account_id = v['AccountId']
+                if temp_non_compliant_dynamodb_list != []:
+                    temp_obj = {
+                        'account_id': temp_account_id,
+                        'resource_list': temp_non_compliant_dynamodb_list
+                    }
+                    returned_report_items.append(temp_obj)
+    return returned_report_items
+
+def get_capability(capability_list, account_id):
+    for c in capability_list:
+       if c['awsAccountId'] == account_id:
+           return c
 
 
-    returned_obj = {}
-    with open("./output/prowler-output-<account-id-here>-20230522154659.json") as json_file:
+def produce_values_file(report_items, caps_source_file):
+    entries = []
+    non_cap_account = []
+    with open(caps_source_file) as json_file:
         json_data = json.load(json_file)
+        for it in report_items:
+            cap = get_capability(json_data, it['account_id'])
+            if cap == None:
+                non_cap_account.append(it)
+                continue
+            value_list_item = {
+                'name': cap['name'],
+                'emails': cap['emails'],
+                'values': {
+                    'affectedResources': it['resource_list']
+                }
+            }
+            entries.append(value_list_item)
 
-        for v in json_data:
-            if v['Status'] == 'FAIL':
+        vars_file = {
+            'title': 'Capability [{{ .Vars.Name }}] - DynamoDB tables not compliant bla!',
+            'entries': entries
+        }
 
-                print('Table name: ' + v['ResourceId'], v['AccountId'])
-                returned_obj = {'AccountID':v['AccountId'], 'TableNames':}
+        with open("vars.json", "w") as outfile:
+            json.dump(vars_file, outfile)
 
+        with open("dynamodb-tables-in-non-cap-accounts.json", "w") as outfile:
+            json.dump(non_cap_account,outfile)
 
 def main():
-   # generate_report()
-    parse_report()
+    dynamodb_list = parse_report()
+
+    produce_values_file(dynamodb_list,'./assets/caps.json')
 if __name__ == "__main__":
     main()
