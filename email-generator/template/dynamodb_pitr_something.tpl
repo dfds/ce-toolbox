@@ -1,6 +1,6 @@
 Hi,
 
-You are receiving this email because you're a member of the {{index .Vars "RootId"}} Capability.
+You are receiving this email because you're a member of the {{index .Vars "Name"}} Capability.
 
 Something something DynamoDB is something something wrong. Please read the documentation at REMOVED and adjust accordingly.
 

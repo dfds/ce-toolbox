@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 )
 
 type templateVars struct {
@@ -61,24 +62,39 @@ func main() {
 		log.Fatal("Unable to parse template file")
 	}
 
+	titleTemplateContainer := template.New("title")
+	titleTemplateParsed, err := titleTemplateContainer.Parse(massData.Title)
+	if err != nil {
+		log.Fatal("Unable to parse template file")
+	}
+
 	for _, entry := range massData.Entries {
 		var body bytes.Buffer
-		entry.Values["RootId"] = entry.Name
+		entry.Values["Name"] = entry.Name
 		err = templateParsed.Execute(&body, templateVars{Vars: entry.Values})
 		if err != nil {
 			log.Println("Unable to generate template")
 			log.Fatal(err)
 		}
 
-		fmt.Println(body.String())
-		err = sendEmail(context.Background(), sesRequest{
-			Msg:    body.String(),
-			Title:  massData.Title,
-			From:   "noreply@dfds.cloud",
-			Emails: entry.Emails,
-		})
-		if err != nil {
-			log.Fatal(err)
+		var titleBody bytes.Buffer
+		err = titleTemplateParsed.Execute(&titleBody, templateVars{Vars: entry.Values})
+
+		for _, email := range entry.Emails {
+			err = sendEmail(context.Background(), sesRequest{
+				Msg:    body.String(),
+				Title:  titleBody.String(),
+				From:   "noreply@dfds.cloud",
+				Emails: []string{email},
+			})
+			if err != nil {
+				log.Println(fmt.Sprintf("Failed sending email to %s for Capability %s", email, entry.Name))
+				log.Println(err)
+			} else {
+				log.Println(fmt.Sprintf("Sent email to %s for Capability %s", email, entry.Name))
+			}
+
+			time.Sleep(time.Millisecond * 750) //TODO: Implement actual rate limiting system, for now this'll do
 		}
 	}
 
@@ -112,8 +128,6 @@ func sendEmail(ctx context.Context, req sesRequest) error {
 		fmt.Println(output)
 		return err
 	}
-
-	fmt.Println(output)
 
 	return nil
 }
