@@ -1,0 +1,19 @@
+{
+  "title": "Capability [{{ .Vars.Name }}] - TITLE MESSAGE",
+  "entries": [
+    {
+      "name": "dev01",
+      "emails": ["dummy@xaxa.com", "dev01@xaxa.com"],
+      "values": {
+        "affectedResources": ["1", "2", "weee"]
+      }
+    },
+    {
+      "name": "Emcla-sandbox",
+      "emails": ["emcla@xaxa.com", "emcla-sandbox@seq.tf", "hostmaster@xaxa.com"],
+      "values": {
+        "affectedResources": ["cwlogs-forwarder", "tf-state", "i-am-a-real-dynamodb-now-squeeee"]
+      }
+    }
+  ]
+}
