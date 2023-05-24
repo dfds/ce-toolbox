@@ -62,10 +62,15 @@ def get_account_name(account_id):
     response = client.describe_account(AccountId=account_id)
     return response['Account']['Name']
 
+def get_members_from_legacy_accounts(source_file, account_name): # TODO: Finish load and filter based on target account_name
+    with open(source_file) as json_file:
+        json_data = json.load(json_file)
+    return json_data
 
-def produce_values_file(report_items, caps_source_file):
+def produce_values_file(report_items, caps_source_file, leg_caps_source_file):
     entries = []
     non_cap_account = []
+
     with open(caps_source_file) as json_file:
         json_data = json.load(json_file)
         for it in report_items:
@@ -96,6 +101,8 @@ def produce_values_file(report_items, caps_source_file):
 
         with open("dynamodb-tables-in-non-cap-accounts.json", "w") as outfile:
             json.dump(non_cap_account, outfile)
+
+
 
 
 def main():
