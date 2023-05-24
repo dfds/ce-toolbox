@@ -18,13 +18,15 @@ import boto3
 # Using Terraform: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table#point_in_time_recovery
 
 def generate_report():
+    print("Generating Prowler report...")
     exit_code = subprocess.call('./fetch_backup_stats.sh')
+    print("Generating Prowler report. Done.")
     print(exit_code)
 
 
 def parse_report():
-    # For each json file:'
-    returned_report_items = []  # list of objects ?
+    print("Rendering report content...")
+    returned_report_items = []
 
     directory = './output/'
     files = Path(directory).glob('*.json')
@@ -38,8 +40,7 @@ def parse_report():
             if len(json_data) != 0:
                 for v in json_data:  # For each dynamodb entry
                     if v['Status'] == 'FAIL':
-                        # print('Table name: ' + v['ResourceId'], v['AccountId'])
-                        temp_table_details = v['ResourceId'] + " " + v['Region']
+                        temp_table_details = v['ResourceId'] + " in " + v['Region']
                         temp_non_compliant_dynamodb_list.append(temp_table_details)
                         temp_account_id = v['AccountId']
                 if temp_non_compliant_dynamodb_list:
@@ -48,6 +49,7 @@ def parse_report():
                         'resource_list': temp_non_compliant_dynamodb_list
                     }
                     returned_report_items.append(temp_obj)
+    print("Rendering report content. Done.")
     return returned_report_items
 
 
@@ -62,53 +64,65 @@ def get_account_name(account_id):
     response = client.describe_account(AccountId=account_id)
     return response['Account']['Name']
 
-def get_members_from_legacy_accounts(source_file, account_name): # TODO: Finish load and filter based on target account_name
-    with open(source_file) as json_file:
-        json_data = json.load(json_file)
-    return json_data
-
 def produce_values_file(report_items, caps_source_file, leg_caps_source_file):
-    entries = []
-    non_cap_account = []
 
+    print("Generating email content...")
+    legacy_caps_data = None
+    with open(leg_caps_source_file) as json_file:
+        legacy_caps_data = json.load(json_file)
+
+    entries = []
+    manual_entries = []
     with open(caps_source_file) as json_file:
         json_data = json.load(json_file)
-        for it in report_items:
-            account_id = it['account_id']
+        emails = []
+        for report_item in report_items:
+            account_id = report_item['account_id']
             cap = get_capability(json_data, account_id)
             if cap is None:
                 account_name = get_account_name(account_id)
-                it['name'] = account_name
-
-                non_cap_account.append(it)
-                continue
+                for legacy_cap in legacy_caps_data:
+                    if legacy_cap['name'] == account_name:
+                        emails= legacy_cap['members']
+                        break
+            else:
+                account_name = cap['name']
+                emails = cap['emails']
             value_list_item = {
-                'name': cap['name'],
-                'emails': cap['emails'],
+                'name': account_name,
+                'emails': emails,
                 'values': {
-                    'affectedResources': it['resource_list']
+                    'affectedResources': report_item['resource_list']
                 }
             }
-            entries.append(value_list_item)
+            if not value_list_item['emails']:
+                manual_entries.append(value_list_item)
+            else:
+                entries.append(value_list_item)
 
         vars_file = {
-            'title': 'Capability [{{ .Vars.Name }}] - DynamoDB tables not compliant bla!',
+            'title': 'Capability [{{ .Vars.Name }}] - DynamoDB tables not compliant!',
             'entries': entries
         }
 
         with open("vars.json", "w") as outfile:
             json.dump(vars_file, outfile)
 
-        with open("dynamodb-tables-in-non-cap-accounts.json", "w") as outfile:
-            json.dump(non_cap_account, outfile)
 
+        with open("manual_list.json", "w") as outfile:
+            json.dump(manual_entries, outfile)
+
+    print("Generating email content. Done.")
 
 
 
 def main():
+
+    generate_report()
+
     dynamodb_list = parse_report()
 
-    produce_values_file(dynamodb_list, './assets/caps.json')
+    produce_values_file(dynamodb_list, './assets/caps.json', './assets/legacy_caps.json')
 
 
 if __name__ == "__main__":
