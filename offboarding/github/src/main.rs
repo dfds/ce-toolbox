@@ -7,6 +7,8 @@ use octocrab::models::App;
 use serde::{Serialize, Deserialize};
 use std::fs::File;
 use std::io::{Error as IoError, Write};
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 #[tokio::main]
 async fn main() {
@@ -31,8 +33,10 @@ async fn main() {
     }
     // Deploy keys
     let mut key_futures = Vec::new();
+    // Todo: Add limit on max requests
+    let sema = Arc::new(Semaphore::new(10));
     for repo in &prs {
-        let fut = get_key(octo.clone(), repo.name.clone());
+        let fut = get_key(octo.clone(), sema.clone(),repo.name.clone());
         key_futures.push(fut.boxed());
     }
     let keys_results = futures::future::join_all(key_futures).await;
@@ -61,8 +65,10 @@ async fn main() {
 
     // Repo users
     let mut users_futures = Vec::new();
+    let sema = Arc::new(Semaphore::new(10));
+    // Todo: Add limit on max requests
     for repo in &prs {
-        let fut = get_collaborators(octo.clone(), repo.name.clone());
+        let fut = get_collaborators(octo.clone(), sema.clone(), repo.name.clone());
         users_futures.push(fut.boxed());
     }
     let users_results = futures::future::join_all(users_futures).await;
@@ -109,9 +115,9 @@ async fn main() {
                     println!("    Added by     : {}", key.added_by);
                     println!("    Creator URL  : https://github.com/{}", key.added_by);
                     println!("    Created at   : {}", key.created_at);
-                    println!("    Last used    : {}", key.last_used);
+                    println!("    Last used    : {}", key.last_used.clone().unwrap_or_default());
                     print!("\n");
-                    write!(deploy_keys_file, "{},\"{}\",{},https://github.com/{},{},{}\n", k, key.title, key.added_by, key.added_by, key.created_at, key.last_used).unwrap();
+                    write!(deploy_keys_file, "{},\"{}\",{},https://github.com/{},{},{}\n", k, key.title, key.added_by, key.added_by, key.created_at, key.last_used.unwrap_or_default()).unwrap();
                 }
             }
 
@@ -174,9 +180,11 @@ fn octo_error_handler(err : Error) -> Option<()> {
     None
 }
 
-async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<Key>>, AppError> {
+async fn get_key(octo : Octocrab, sema : Arc<Semaphore>, repo_name : String) -> Result<OctoFutureResp<Vec<Key>>, AppError> {
+    let permit = sema.acquire_owned().await.unwrap();
     let route = format!("/repos/dfds/{}/keys", repo_name);
     let resp : Result<Vec<Key>, Error> = octo.get(route, None::<&()>).await;
+    drop(permit);
     return match resp {
         Ok(val) => {
             Ok(OctoFutureResp {
@@ -191,9 +199,11 @@ async fn get_key(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<V
     }
 }
 
-async fn get_collaborators(octo : Octocrab, repo_name : String) -> Result<OctoFutureResp<Vec<RepoCollaborator>>, AppError> {
+async fn get_collaborators(octo : Octocrab, sema : Arc<Semaphore>, repo_name : String) -> Result<OctoFutureResp<Vec<RepoCollaborator>>, AppError> {
+    let permit = sema.acquire_owned().await.unwrap();
     let route = format!("/repos/dfds/{}/collaborators?affiliation=direct", repo_name);
     let resp = octo.get(route, None::<&()>).await;
+    drop(permit);
     return match resp {
         Ok(val) => {
             Ok(OctoFutureResp {
@@ -256,7 +266,7 @@ pub struct Key {
     pub title : String,
     pub verified : bool,
     pub created_at : String,
-    pub last_used : String,
+    pub last_used : Option<String>,
     pub read_only : bool,
     pub added_by : String
 }
