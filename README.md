@@ -1,2 +1,2 @@
 # ded-toolbox
-Various scripts and snippets
+Various scripts and snippets.
